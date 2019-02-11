@@ -827,6 +827,13 @@ class EditorPlugin extends Gdn_Plugin {
                 if ($uploadType === 'unknown') {
                     $uploadType = 'image';
                 }
+
+                // image dimensions are higher than limit and it needs resizing
+                if ($tmpwidth > c("Garden.Upload.MaxWidth") || $tmpheight > c("Garden.Upload.MaxHeight")) {
+                    $imageResizer = new \Vanilla\ImageResizer();
+                    $imageResizer->resize($tmpFilePath, null, ["height"=>c("Garden.Upload.MaxHeight"), "width"=>c("Garden.Upload.MaxWidth"), "crop"=>true]);
+                }
+
                 $filePathParsed = Gdn_UploadImage::saveImageAs(
                     $tmpFilePath,
                     $absoluteFileDestination,
@@ -845,8 +852,8 @@ class EditorPlugin extends Gdn_Plugin {
             // Determine if image, and thus requires thumbnail generation, or simply saving the file.
             // Not all files will be images.
             $thumbHeight = null;
-            $thumbWidth = null;
-            $imageHeight = null;
+            $thumbWidth = c("Garden.Upload.MaxWidth");
+            $imageHeight = c("Garden.Upload.MaxHeight");
             $imageWidth = null;
             $thumbPathParsed = ['SaveName' => ''];
             $thumbUrl = '';
@@ -999,7 +1006,7 @@ class EditorPlugin extends Gdn_Plugin {
                 throw new Exception(t('You are not allowed to upload files in this category.'));
             }
         }
-        
+
         if (count($mediaIds)) {
             foreach ($mediaIds as $mediaId) {
                 $this->attachEditorUploads($mediaId, $id, $type);
